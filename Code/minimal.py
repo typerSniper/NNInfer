@@ -3,7 +3,7 @@ import numpy as np
 
 # asssumes that activation_pattern implies properties
 def findMinimal (activation_pattern, properties):
-	assert(isSatisfied(activation_pattern, properties))
+	assert(check_sat(activation_pattern, properties, nnet))
 
 	num_layers = activation_pattern.shape
 
@@ -14,7 +14,7 @@ def findMinimal (activation_pattern, properties):
 		num_neurons = (m_activation_pattern[layer].shape)[0]
 		m_activation_pattern[layer] = np.repeat(2, num_neurons)
 		
-		if isSatisfied(m_activation_pattern, properties):
+		if check_sat(m_activation_pattern, properties, nnet):
 			continue
 		else:
 			m_activation_pattern[layer] = activation_pattern[layer]
@@ -38,7 +38,7 @@ def findMinimalInLayer(activation_pattern, properties, layerNum):
 		initial_status = activation_pattern[layer][candidate]
 		activation_pattern[layer][candidate] = 2
 
-		if initial_status==2 or isSatisfied(activation_pattern, properties):
+		if initial_status==2 or check_sat(activation_pattern, properties, nnet):
 			continue
 		else:
 			activation_pattern[layer][candidate] = initial_status
