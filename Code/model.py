@@ -1,72 +1,51 @@
 import numpy as np
-import tensorflow as tf
-import os
-from tensorflow.python.tools import freeze_graph
 
 class Model:
-  '''
-  Model can be :
-  Any number of layers
-  Only ReLU
-  '''
-  def __init__(self, num_neurons):
-    self.inp = tf.placeholder(tf.float32, [None, num_neurons[0]])
-    self.num_neurons = num_neurons
-    self.num_layers = len(num_neurons)
+	'''
+	Model can be :
+		Any number of layers
+		ReLU after each hidden layer
+		Output is the logits
+	'''
+	def __init__(self, num_neurons):
+		'''
+		Arguments :
+			num_neurons : list of neuron count of each layer
+				(First value in list should be dim of input)
+		Returns :
+			<Nothing>
+			Initializes weights and biases of the network
+			TODO(if needed) : Different kinds of initialization
+		'''
+		self.num_neurons = num_neurons
+		self.num_layers = len(num_neurons)
 
-    self.weights = []
-    self.biases = []
-    self.tensors = []
-    prev = self.inp
-    for layer in range(1, self.num_layers):
-      tensor_ = tf.layers.dense(prev, num_neurons[layer], use_bias=True)
-      self.tensors.append(tf.nn.relu(tensor_))
-    tf.global_variables_initializer()
-    self.session = tf.Session()
-  
-  def save(self, directory, filename):
+		self.weights = {}
+		self.biases = {}
 
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        filepath = os.path.join(directory, filename + '.ckpt')
-        self.saver.save(self.sess, filepath)
-        return filepath
+		for lyr in range(1, self.num_layers):
+			# Random Gaussian initialization for now
+			W_ = np.random.randn(num_neurons[lyr-1], num_neurons[lyr])
+			b_ = np.random.randn(num_neurons[lyr])
+			self.weights[lyr] = W_
+			self.biases[lyr] = b_
 
-
-  def save_as_pb(self, directory, filename):
-
-      if not os.path.exists(directory):
-          os.makedirs(directory)
-
-      # Save check point for graph frozen later
-      ckpt_filepath = self.save(directory=directory, filename=filename)
-      pbtxt_filename = filename + '.pbtxt'
-      pbtxt_filepath = os.path.join(directory, pbtxt_filename)
-      pb_filepath = os.path.join(directory, filename + '.pb')
-      # This will only save the graph but the variables will not be saved.
-      # You have to freeze your model first.
-      tf.train.write_graph(graph_or_graph_def=self.sess.graph_def, logdir=directory, name=pbtxt_filename, as_text=True)
-
-      # Freeze graph
-      # Method 1
-      freeze_graph.freeze_graph(input_graph=pbtxt_filepath, input_saver='', input_binary=False, input_checkpoint=ckpt_filepath, output_node_names='cnn/output', restore_op_name='save/restore_all', filename_tensor_name='save/Const:0', output_graph=pb_filepath, clear_devices=True, initializer_nodes='')
-      
-      # Method 2
-      '''
-      graph = tf.get_default_graph()
-      input_graph_def = graph.as_graph_def()
-      output_node_names = ['cnn/output']
-
-      output_graph_def = graph_util.convert_variables_to_constants(self.sess, input_graph_def, output_node_names)
-
-      with tf.gfile.GFile(pb_filepath, 'wb') as f:
-          f.write(output_graph_def.SerializeToString())
-      '''
-      
-      return pb_filepath
+	def activation_pattern_from_input(self, input_val):
+		'''
+		Arguments :
+			input_val : 1d np.array of shape num_neurons[0]
+		Returns :
+			Full activation pattern as a np array
+		'''
+		assert input_val.shape == (self.num_neurons[0],), "Shape of input wrong"
+		curr = input_val
+		for lyr in range(1, self.num_layers):
+			self.weights[lyr]
 
 
+	def write_NNET(self):
+
+	def weights_final(self, input_val):
 
 num_neurons = [2,3,3,2]
 model = Model(num_neurons)
-model.save_as_pb("random", "random")
