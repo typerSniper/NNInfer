@@ -1,6 +1,7 @@
 import sys, os
 import subprocess
 
+PATH_TO_MARABOU = '../Marabou/build/Marabou'
 
 def get_activation_constraints(activation_pattern):
 	upper_thresh = 1e-8
@@ -23,19 +24,20 @@ def write_to_file(activation_pattern_string, conj_properties):
 		f.write(constraints)
 	return file_name
 
-def call_marabou(path_to_marabou, nnet_file, property_file):
+def call_marabou(nnet_file, property_file):
+	global PATH_TO_MARABOU
 	flags = ['--verbosity=0']
-	cmd = [path_to_marabou, nnet_file, property_file, flags]
+	cmd = [PATH_TO_MARABOU, nnet_file, property_file, flags]
 	proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
 	(out, err) = proc.communicate()
 	assert out.count('SAT')==1, "Number of SAT in Marabou assumption failed"
 	return (not "UNSAT" in out)
 
-def check_sat(path_to_marabou, nnet_file, activation_pattern, cnf_properties):
+def check_sat(nnet_file, activation_pattern, cnf_properties):
 	activation_pattern_string = get_activation_constraints(activation_pattern)
 	for conj_properties in cnf_properties:
 		property_file = write_to_file(activation_pattern_string, conj_properties)
-		sat = call_marabou(path_to_marabou, nnet_file, property_file)
+		sat = call_marabou(nnet_file, property_file)
 		if sat:
 			return sat
 	return False
