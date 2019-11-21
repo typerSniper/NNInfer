@@ -8,26 +8,28 @@ def get_activation_constraints(activation_pattern):
 	def get_constraint_string(layer_id, neuron_id, val):
 		neuron_name = "ws_" + str(layer_id+1) + "_" + str(neuron_id)
 		value = ">=" + str(upper_thresh) if val else "<=0"
-		return  ' '.join(neuron_name, value)
+		return  ' '.join([neuron_name, value])
 	activation_constraints = []
 	for layer_id,layer in enumerate(activation_pattern):
 		for neuron_id,val in enumerate(layer):
 			if val == 0 or val == 1: 
 				constraint = get_constraint_string(layer_id, neuron_id, val)
 				activation_constraints.append(constraint)
-	return activation_constraints
+	return '\n'.join(activation_constraints)
 
 def write_to_file(activation_pattern_string, conj_properties):
 	file_name = "scratch/property.txt"
-	with open(file_name) as f:
-		constraints = activation_pattern_string + '\n' + conj_properties
+	with open(file_name, 'w') as f:
+		conj_properties_string = '\n'.join(conj_properties)
+		constraints = activation_pattern_string + '\n' + conj_properties_string
 		f.write(constraints)
 	return file_name
 
 def call_marabou(nnet_file, property_file):
 	global PATH_TO_MARABOU
 	flags = ['--verbosity=0']
-	cmd = [PATH_TO_MARABOU, nnet_file, property_file, flags]
+	cmd = [PATH_TO_MARABOU, nnet_file, property_file] + flags
+	print (cmd)
 	proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
 	(out, err) = proc.communicate()
 	assert out.count('SAT')==1, "Number of SAT in Marabou assumption failed"

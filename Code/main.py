@@ -1,21 +1,20 @@
-import sys, os
+from check_sat import check_sat
+from model import Model
+import numpy as np
 
-def get_activation_constraints(activation_pattern):
-	upper_thresh = 1e-8
-	def get_constraint_string(layer_id, neuron_id, val):
-		neuron_name = "ws_" + str(layer_id+1) + "_" + str(neuron_id)
-		value = ">=" + str(upper_thresh) if val else "<=0"
-		return  ' '.join(neuron_name, value)
-	activation_constraints = []
-	for layer_id,layer in enumerate(activation_pattern):
-		for neuron_id,val in enumerate(layer):
-			if val == 0 or val == 1: 
-				constraint = get_constraint_string(layer_id, neuron_id, val)
-				activation_constraints.append(constraint)
-	return '\n'.join(activation_constraints)
+def main():
+	num_neurons = [2,3,3,2]
+	model = Model(num_neurons)
+	nnet_name = 'dummy.nnet'
+	model.write_NNET(nnet_name)
+	for r in range(10):
+		print("On random input " + str(r))
+		inp = np.random.randn(2)
+		activation_pattern = model.activation_pattern_from_input(inp)
+		weights = model.affine_params(inp)
+		properties = [['y0 >= y1']]
+		is_sat = check_sat(nnet_name, activation_pattern, properties)
+		print (is_sat)
 
-def get_property_constraints(property_string_list):
-	return '\n'.join(property_string_list)
-
-
-
+if __name__ == '__main__':
+    main()
