@@ -1,9 +1,10 @@
 import numpy as np
 
+from check_sat import check_sat
 
 # asssumes that activation_pattern implies properties
 def findMinimal (activation_pattern, properties, nnet):
-	assert(check_sat(activation_pattern, properties, nnet))
+	assert(not check_sat(activation_pattern, properties, nnet))
 
 	num_layers = activation_pattern.shape
 
@@ -14,13 +15,11 @@ def findMinimal (activation_pattern, properties, nnet):
 		num_neurons = (m_activation_pattern[layer].shape)[0]
 		m_activation_pattern[layer] = np.repeat(2, num_neurons)
 		
-		if check_sat(m_activation_pattern, properties, nnet):
+		if not check_sat(m_activation_pattern, properties, nnet):
 			continue
 		else:
 			m_activation_pattern[layer] = activation_pattern[layer]
 			return findMinimalInLayer(m_activation_pattern, properties, layer, nnet)
-	
-	print("Empty activation_pattern!")
 	return m_activation_pattern
 
 
@@ -34,14 +33,14 @@ def findMinimalInLayer(activation_pattern, properties, layerNum, nnet):
 	while len(candidates)!=0:
 
 		candidate = getNext(candidates, activation_pattern, properties, layerNum)
-		np.delete(candidates, candidate)
-		initial_status = activation_pattern[layer][candidate]
-		activation_pattern[layer][candidate] = 2
+		candidates = candidates[candidates != candidate]
+		initial_status = activation_pattern[layerNum][candidate]
+		activation_pattern[layerNum][candidate] = 2
 
-		if initial_status==2 or check_sat(activation_pattern, properties, nnet):
+		if initial_status==2 or not check_sat(activation_pattern, properties, nnet):
 			continue
 		else:
-			activation_pattern[layer][candidate] = initial_status
+			activation_pattern[layerNum][candidate] = initial_status
 	return activation_pattern			
 
 
