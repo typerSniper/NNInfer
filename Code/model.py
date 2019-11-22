@@ -91,7 +91,7 @@ class Model:
 			biases_list.append(self.biases[lyr])
 		num_inp = self.num_neurons[0]
 		writeNNet(weights_list, biases_list, [-3.0]*num_inp,
-			[3.0]*num_inp, [0.0]*(num_inp+1),[1.0]*(num_inp+1),fname)
+			[3.0]*num_inp, [0.0]*(num_inp+1),[6.0]*(num_inp+1),fname)
 
 	def affine_params(self, input_val):
 		'''
