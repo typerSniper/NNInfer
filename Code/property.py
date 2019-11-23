@@ -1,13 +1,19 @@
 def get_negate_property_cnf(weights, bias, inp, pred_y, epsilon):
+	def print_contant(val):
+		if val > 0:
+			return "+" + str(val)
+		else:
+			return str(val)
+
 	def get_negate_property(pred_y, curr_y, diff_weights, diff_bias, epsilon):
 		diff_y_term = "+y" + str(pred_y) + " -y" + str(curr_y)
-		diff_weights_term = ' '.join([str(-1*diff_weight) + "x" + str(idx) 
+		diff_weights_term = ' '.join([print_contant(-1*diff_weight) + "x" + str(idx) 
 								for idx,diff_weight in enumerate(diff_weights)])
-		diff_bias_term = str(-1*diff_bias)
-		epsilon_term = "+" + str(epsilon)
-		value = "<= 0"
-		property_eqn = ' '.join([diff_y_term, diff_weights_term, diff_bias_term, epsilon_term, value])
+		value = "<="
+		diff_bias_term = print_contant(diff_bias - epsilon)
+		property_eqn = ' '.join([diff_y_term, diff_weights_term, value, diff_bias_term])
 		return property_eqn
+
 	num_out = weights.shape[0]
 	clause = []
 	for i in range(num_out):

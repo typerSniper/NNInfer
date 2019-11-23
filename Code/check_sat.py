@@ -32,7 +32,7 @@ def call_marabou(nnet_file, property_file):
 	proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 	(out, err) = proc.communicate()
 	out = str(out)
-	print(out)
+	# print(out)
 	assert out.count('SAT')==1, "Number of SAT in Marabou assumption failed"
 	return (not "UNSAT" in out)
 
