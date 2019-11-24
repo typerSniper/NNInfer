@@ -70,56 +70,78 @@ def unfold_weight_vec(tup):
 	constr = ""
 	for k in range(len_constr):
 		constr+=" +(%d)x_%d"%(weightM[k], k)
-	constr+=" <= %s\n"%(print_constant(tup[2])) #decide between <= or >=
+	constr+=" <= %s"%(print_constant(tup[2])) #decide between <= or >=
 
 	return constr
 
-def compare_left(nnet_file, sigma1, P, sigma2):
-	sigma1_constraints = get_activation_constraints(sigma1)
-	property_constraints = ""
-	for tup in P:
-		property_constraints+=unfold_weight_vec(tup)
-	sigma2_constraints = get_activation_constraints(sigma2)
+# def compare_left(nnet_file, sigma1_constraints, P, sigma2_constraints):
+	
+# 	property_constraints = ""
+# 	for tup in P:
+# 		property_constraints+=unfold_weight_vec(tup)
 
-	lhs = property_constraints
-	if len(sigma1_constraints)!=0:
-		lhs+='\n'.join(sigma1_constraints)
+# 	lhs = property_constraints
+# 	if len(sigma1_constraints)!=0:
+# 		lhs+='\n'.join(sigma1_constraints)
+
+# 	comp_ok = True
+# 	for prop in sigma2_constraints:
+# 		comp_ok = comp_ok and (not call_marabou(nnet_file, write_to_file(lhs+prop+'\n')) )
+# 		if not comp_ok:
+# 			break
+	
+# 	return comp_ok
+
+# def compare_right(nnet_file, sigma1_constraints, P, sigma2_constraints):
+	
+# 	for tup in P:
+# 		property_constraints.append(unfold_weight_vec(tup))
+	
+# 	lhs = ""
+# 	if len(sigma2_constraints)!=0:
+# 		lhs+='\n'.join(sigma2_constraints)
+
+# 	comp_ok = True
+
+# 	for prop in sigma1_constraints+property_constraints:
+# 		comp_ok = comp_ok and (not call_marabou(nnet_file, write_to_file(lhs+prop+'\n')))
+# 		if not comp_ok:
+# 			break
+
+# 	return comp_ok
+
+def compare_left(nnet_file, lhs, rhs):
+	lhs_str = ""
+
+	if len(lhs)!=0:
+		lhs_str += '\n'.join(lhs)
 
 	comp_ok = True
-	for prop in sigma2_constraints:
-		comp_ok = comp_ok and (not call_marabou(nnet_file, write_to_file(lhs+prop+'\n')) )
+
+	for prop in rhs:
+		neg_prop = negate_one_constraint(prop)
+		comp_ok = comp_ok and (not call_marabou(nnet_file, write_to_file(lhs_str+neg_prop+'\n')))
 		if not comp_ok:
 			break
 	
-	return comp_ok
-
-def compare_right(nnet_file, sigma1, P, sigma2):
-	sigma1_constraints = get_activation_constraints(sigma1)
-	property_constraints = []
-	for tup in P:
-		property_constraints.append(unfold_weight_vec(tup))
-	
-	sigma2_constraints = get_activation_constraints(sigma2)
-	lhs = ""
-	if len(sigma2_constraints)!=0:
-		lhs+='\n'.join(sigma2_constraints)
-
-	comp_ok = True
-
-	for prop in sigma1_constraints+property_constraints:
-		comp_ok = comp_ok and (not call_marabou(nnet_file, write_to_file(lhs+prop+'\n')))
-		if not comp_ok:
-			break
-
 	return comp_ok
 
 def compare_invariants(nnet_file, sigma1, P, epsilon, sigma2):
+
+	property_constraints = []
 	for tup in P:
 		tup[2]+=epsilon # decide between + or -
-	
-	if compare_left(nnet_file, sigma1, P, epsilon, sigma2):
+		property_constraints.append(unfold_weight_vec(tup))
+
+	sigma1_constraints = get_activation_constraints(sigma1)
+	sigma2_constraints = get_activation_constraints(sigma2)
+
+	lhs = sigma1_constraints+property_constraints
+	rhs = sigma2_constraints
+
+	if compare_left(nnet_file, lhs, rhs):
 		print("sigma1 and P implies sigma2")
-	elif compare_right(nnet_file, sigma1, P, epsilon, sigma2):
+	elif compare_left(nnet_file, rhs, lhs):
 		print("sigma2 implies sigma1 and P")
 	else:
 		print("orthogonal formulae")
