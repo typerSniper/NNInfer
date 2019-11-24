@@ -1,10 +1,6 @@
-def get_negate_property_cnf(weights, bias, inp, pred_y, epsilon):
-	def print_constant(val):
-		if val > 0:
-			return "+" + str(val)
-		else:
-			return str(val)
+from check_sat import print_constant
 
+def get_negate_property_cnf(weights, bias, inp, pred_y, epsilon):
 	def get_negate_property(pred_y, curr_y, diff_weights, diff_bias, epsilon):
 		diff_y_term = "+y" + str(pred_y) + " -y" + str(curr_y)
 		diff_weights_term = ' '.join([print_constant(-1*diff_weight) + "x" + str(idx) 
