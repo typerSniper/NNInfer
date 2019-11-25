@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
+num_pts = 100
+
 def list_colors(num_colors):
 	''' Returns a list of matplotlib colors '''
 	colors = []
@@ -9,11 +11,14 @@ def list_colors(num_colors):
 		colors.append(name)
 		if len(colors) >= num_colors:
 			break
+	# Debug : because 'antiquewhite' & 'blanchedalmond' look the same
+	if num_colors == 16:
+		return ['darkblue', 'darkcyan', 'darkgoldenrod', 'darkgray', 'darkgreen', 'darkkhaki', 'darkmagenta', 'darkolivegreen', 'darkorange', 'darkorchid', 'darkred', 'darksalmon', 'darkseagreen', 'darkslateblue', 'darkslategray', 'darkturquoise']
 	return colors
 
 def map_to_cindex(actp, hidden_neurons):
 	'''
-	Maps an activation pattern to an index in range(0,T)
+	Maps a full activation pattern to an index in range(0,T)
 	T = total number of activation patterns possible
 	'''
 	actp_vec = np.reshape(actp, (-1,))
@@ -31,15 +36,29 @@ def plot_base(model, property_original, save_fname):
 	hidden_neurons = model.hidden_neurons
 	colors = list_colors(2**hidden_neurons)
 
-	xps = np.linspace(min_val, max_val, 100)
-	yps = np.linspace(min_val, max_val, 100)
+	xps = np.linspace(min_val, max_val, num_pts)
+	yps = np.linspace(min_val, max_val, num_pts)
 
+	# Debug :: conclusion - 'antiquewhite'(1) & 'blanchedalmond'(8) look the same
+	'''
+	lis = []
+	lis.append(np.array([-1.6, (0.25)*(-1.6) - 0.5 + 0.15]))
+	lis.append(np.array([-2.4, (0.25)*(-2.4) - 0.5 - 0.15]))
+	for pt in lis:
+		act_pattern = model.activation_pattern_from_input(pt)
+		print(act_pattern)
+		color_ind = map_to_cindex(act_pattern, hidden_neurons)
+		print(color_ind)
+		print(colors[color_ind])
+		plt.plot([pt[0]], [pt[1]], marker='x', markersize=6, color='k')
+	'''
 	# Plot model's honeycomb
 	for x in xps:
 		for y in yps:
 			act_pattern = model.activation_pattern_from_input(np.array([x,y]))
 			color_ind = map_to_cindex(act_pattern, hidden_neurons)
 			plt.plot([x], [y], marker='o', markersize=2, color=colors[color_ind])
+			# plt.text(x, y, str(color_ind), color="red", fontsize=3)
 
 	# Plot the property separator
 	for property_ in property_original:
@@ -49,9 +68,9 @@ def plot_base(model, property_original, save_fname):
 		prop_comp = prop.split(' ')
 		assert len(prop_comp) == 4, "Property doesn't have 4 components in plot"
 		
-		sign0 = 1 if prop_comp[0][0] == '+' else -1
+		sign0 = (1 if prop_comp[0][0] == '+' else -1)
 		logit0 = int(prop_comp[0][2:])
-		sign1 = 1 if prop_comp[1][0] == '+' else -1
+		sign1 = (1 if prop_comp[1][0] == '+' else -1)
 		logit1 = int(prop_comp[1][2:])
 		sign = prop_comp[2]
 		value = float(prop_comp[3])
@@ -67,7 +86,8 @@ def plot_base(model, property_original, save_fname):
 					prev_ = curr_
 				else:
 					if curr_ != prev_:
-						plt.plot([x], [y], marker='+', markersize=3, color='yellow')
+						plt.plot([x], [y], marker='+', markersize=4, color='yellow')
+					prev_ = curr_
 	# Save figure
 	plt.savefig(save_fname)
 	plt.clf()
@@ -76,7 +96,7 @@ def plot_base(model, property_original, save_fname):
 def plot_linear_2d(w, b, min_val, max_val, delta=0):
 	''' Plots w^Tx + b = delta in 2D '''
 	assert w.shape == (2,), "Incorrect shape in plot_linear_2d"
-	xps = np.linspace(min_val, max_val, 100)
+	xps = np.linspace(min_val, max_val, num_pts)
 	y = (-w[0]/w[1])*xps  + ((delta-b)/w[1])
 	plt.plot(xps, y, 'k-')
 
@@ -113,8 +133,8 @@ def plot_act_pattern_eps(model, point, act_pattern, weights, biases, save_fname,
 				b = biases[hidlyr][neuron]
 				plot_linear_2d(w, b, min_val, max_val)
 	# Plot the linear boundary
-	w = np.reshape(weights[0,:], (2,)) - np.reshape(weights[1,:], (2,))
-	b = biases[0] - biases[1]
+	w = np.reshape(weight[0,:], (2,)) - np.reshape(weight[1,:], (2,))
+	b = bias[0] - bias[1]
 	plot_linear_2d(w, b, min_val, max_val, eps)
 	# Save figure
 	plt.savefig(save_fname)

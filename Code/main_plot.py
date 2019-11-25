@@ -12,17 +12,26 @@ weights_init[2] = np.array([[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]])
 biases_init = {}
 biases_init[1] = np.array([1.0, 0.0, -2.0, -2.0])
 biases_init[2] = np.zeros(2)
+
+# num_neurons = [2,4,2]
+# weights_init = {}
+# weights_init[1] = np.array([[1.0, -1.0], [-1.0, -1.0], [-1.0, 1.0], [1.0, 1.0]])
+# weights_init[2] = np.array([[1.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 1.0]])
+# biases_init = {}
+# biases_init[1] = np.array([1.0, 1.0, 1.0, 1.0])
+# biases_init[2] = np.zeros(2)
+
 model = Model(num_neurons, weights_init, biases_init)
 nnet_name = 'scratch/dummy_init_plot.nnet'
 model.write_NNET(nnet_name)
 
 property_orig = [['+y0 -y1 >= 0']]
-negate_property_paper = [['+y0 -y1 <= 0']]
 plot_base(model, property_orig, 'scratch/base.png')
+negate_property_paper = [['+y0 -y1 <= 0']]
 
 inp = np.array([1.0, 0.0])
 weights_all, biases_all = model.affine_params(inp, flag='all')
-weights, biases = model.affine_params(inp)
+weights, biases = model.affine_params(inp) # Could also do [-1](last elem) on above lists
 
 # Paper's approach
 activation_pattern = model.activation_pattern_from_input(inp)
