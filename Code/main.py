@@ -20,7 +20,7 @@ def get_additional_constraints(weights_out, bias_out, pred_y):
 
 def main():
 	num_neurons = [2,3,3,2]
-	epsilon = 0.0001
+	epsilon = 1e-4
 	nnet_name = 'scratch/dummy.nnet'
 	min_val = -3
 	max_val = 3

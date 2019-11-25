@@ -1,20 +1,20 @@
 import pulp
 import numpy as np
 
-def get_underapprox_box(activation_pattern, weights, biases, min_values, max_values, additional_constraints, epsilon):
+def get_underapprox_box(activation_pattern, weights, biases, min_val, max_val, additional_constraints, epsilon):
 	def get_w_t_x(weight_vector, pulpInputs):
 		w_t_hi = [weight_vector[i] * pulpInputs[i][1] for i in range(num_inputs)]
 		w_t_lo = [weight_vector[i] * pulpInputs[i][0] for i in range(num_inputs)]
 		return w_t_hi, w_t_lo
 
-	num_inputs = len(min_values)
+	num_inputs = weights[0].shape[1]
 	pulpInputs = []
 	for i in range(num_inputs):
 		var_name = 'x' + str(i)
 		hi = var_name + '_hi'
 		lo = var_name + '_low'
-		d_hi = pulp.LpVariable(hi, lowBound=min_values[i], upBound=max_values[i], cat='Continuous') 
-		d_lo = pulp.LpVariable(lo, lowBound=min_values[i], upBound=max_values[i], cat='Continuous')
+		d_hi = pulp.LpVariable(hi, lowBound=min_val, upBound=max_val, cat='Continuous') 
+		d_lo = pulp.LpVariable(lo, lowBound=min_val, upBound=max_val, cat='Continuous')
 		pulpInputs.append((d_lo, d_hi))
 	prob = pulp.LpProblem("Box", pulp.LpMaximize)
 	prob += pulp.lpSum([(pulpInputs[i][1]-pulpInputs[i][0]) for i in range(num_inputs)]), "Total Range is Maximized"
@@ -47,8 +47,12 @@ def get_underapprox_box(activation_pattern, weights, biases, min_values, max_val
 	status = prob.solve()   
 	result = pulp.LpStatus[status]
 	print (result)
-	assert result=='Optimal', "The under-approximate constraint problem fails to give optimal solution"
 	under_approx_box = []
+	if result == 'Infeasible':
+		for i in range(num_inputs):
+			under_approx_box.append((0, 0))
+		return under_approx_box	
+	assert result=='Optimal', "The under-approximate constraint problem fails to give optimal solution"
 	for i in range(num_inputs):
 		under_approx_box.append((pulp.value(pulpInputs[i][0]), pulp.value(pulpInputs[i][1])))
 	return under_approx_box
