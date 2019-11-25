@@ -19,8 +19,8 @@ def get_additional_constraints(weights_out, bias_out, pred_y):
 
 
 def main():
-	num_neurons = [2,3,3,2]
-	epsilon = 1e-4
+	num_neurons = [20,12,5,10,2]
+	epsilon = 1e-3
 	nnet_name = 'scratch/dummy.nnet'
 	min_val = -3
 	max_val = 3
@@ -29,10 +29,11 @@ def main():
 	model.write_NNET(nnet_name)
 	for r in range(1):
 		print("On random input " + str(r))
-		inp = np.random.randn(2)
+		inp = np.random.randn(num_neurons[0])
 
 		
 		activation_pattern = model.activation_pattern_from_input(inp)
+		print (activation_pattern)
 		weights, bias = model.affine_params(inp, "all")
 		additional_constraints = get_additional_constraints(weights[-1], bias[-1], pred_y)
 		property_our = get_negate_property_cnf(inp, additional_constraints, pred_y, epsilon)
@@ -48,6 +49,7 @@ def main():
 
 
 		activation_pattern = model.activation_pattern_from_input(inp)
+		print (activation_pattern)
 		weights, bias = model.affine_params(inp, "all")
 		additional_constraints = []
 		property_paper = [['+y0 -y1 <= 0']]

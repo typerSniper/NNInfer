@@ -22,6 +22,8 @@ def get_underapprox_box(activation_pattern, weights, biases, min_val, max_val, a
 		weight_matrix = weights[layer_id]
 		bias_vector = biases[layer_id]
 		for neuron_id,neuron in enumerate(layer):
+			if neuron==2:
+				continue
 			weight_vector = weight_matrix[neuron_id]
 			b = bias_vector[neuron_id]
 			w_t_hi, w_t_lo = get_w_t_x(weight_vector, pulpInputs)
@@ -43,7 +45,7 @@ def get_underapprox_box(activation_pattern, weights, biases, min_val, max_val, a
 		rhs = epsilon - diff_bias
 		prob += pulp.lpSum(w_t_hi) >= rhs, constraint_name_hi
 		prob += pulp.lpSum(w_t_lo) >= rhs, constraint_name_lo
-	print (prob)
+	# print (prob)
 	status = prob.solve()   
 	result = pulp.LpStatus[status]
 	print (result)
