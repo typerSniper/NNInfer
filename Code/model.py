@@ -108,8 +108,8 @@ class Model:
 			weights_list.append(self.weights[lyr])
 			biases_list.append(self.biases[lyr])
 		num_inp = self.num_neurons[0]
-		mean_input_val = (self.min_input_val + self.max_input_val)/2
-		range_input_val = self.max_input_val - self.min_input_val
+		mean_input_val = 0
+		range_input_val = 1
 		writeNNet(weights_list, biases_list, [self.min_input_val]*num_inp,
 			[self.max_input_val]*num_inp, [mean_input_val]*(num_inp+1),
 			[range_input_val]*(num_inp+1), fname)

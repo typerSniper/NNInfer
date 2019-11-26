@@ -27,7 +27,7 @@ def getNext(candidates, activation_pattern, properties, layer):
 	return np.amin(candidates)
 
 def findMinimalInLayer(activation_pattern, properties, layerNum, nnet):
-	num_neurons = (activation_pattern.shape)[0]
+	num_neurons = (activation_pattern[layerNum].shape)[0]
 	candidates = np.arange(num_neurons)
 	# activation_pattern = np.copy(activation_pattern)
 	while len(candidates)!=0:
@@ -36,7 +36,6 @@ def findMinimalInLayer(activation_pattern, properties, layerNum, nnet):
 		candidates = candidates[candidates != candidate]
 		initial_status = activation_pattern[layerNum][candidate]
 		activation_pattern[layerNum][candidate] = 2
-
 		if initial_status==2 or not check_sat(activation_pattern, properties, nnet):
 			continue
 		else:

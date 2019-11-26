@@ -11,9 +11,9 @@ def print_constant(val):
 		return str(val)
 
 def get_neuron_string(layer_id, neuron_id, val):
-	upper_thresh = 1e-8
+	upper_thresh = 0.0001
 	neuron_name = "ws_" + str(layer_id+1) + "_" + str(neuron_id)
-	value = ">= " + str(int(upper_thresh)) if val else "<= 0"
+	value = ">= " + str(float(upper_thresh)) if val else "<= 0"
 	return  ' '.join([neuron_name, value])
 
 
@@ -38,17 +38,32 @@ def call_marabou(nnet_file, property_file):
 	proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 	(out, err) = proc.communicate()
 	out = str(out)
-	# print(out)
+	print(out.count('SAT'))
 	assert out.count('SAT')==1, "Number of SAT in Marabou assumption failed"
 	return (not "UNSAT" in out)
 
+def make_dnf(cnf_properties):
+	if len(cnf_properties)==0:
+		return [[]]
+	if len(cnf_properties)==1:
+		dnf = []
+		for literal in cnf_properties[0]:
+			dnf.append([literal])
+		return dnf
+	dnf = []
+	for clause in cnf_properties:
+		assert (len(clause)==1), "assertion for cnf to dnf failed"
+		dnf.append(clause[0])
+	return [dnf]
+
 def check_sat(activation_pattern, cnf_properties, nnet_file):
 	print("checking sat")
+	dnf_properties = make_dnf(cnf_properties)
 	activation_pattern_list = get_activation_constraints(activation_pattern)
-	for conj_properties in cnf_properties:
-		constraints = activation_pattern_list + conj_properties
+	for clause in dnf_properties:
+		constraints = activation_pattern_list + clause
 		constraints_string = '\n'.join(constraints)
-
+		print(constraints_string)
 		property_file = write_to_file(constraints_string)
 		sat = call_marabou(nnet_file, property_file)
 		if sat:
@@ -110,7 +125,7 @@ def unfold_weight_vec(tup):
 
 # 	return comp_ok
 
-def compare_left(nnet_file, lhs, rhs):
+ 
 	lhs_str = ""
 
 	if len(lhs)!=0:

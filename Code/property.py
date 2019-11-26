@@ -22,3 +22,20 @@ def get_negate_property_cnf(inp, additional_constraints, pred_y, epsilon):
 	cnf = [clause]
 	return cnf
 
+def get_negate_property_cnf_paper(pred_y, num_out):
+	clause = []
+	for i in range(num_out):
+		if i == pred_y:
+			continue
+		clause.append('+y'+str(pred_y) + ' -y' + str(i) + ' <= 0')
+	cnf = [clause]
+	return cnf	
+
+
+def get_property_cnf(pred_y, num_out):
+	cnf = []
+	for i in range(num_out):
+		if i == pred_y:
+			continue
+		cnf.append(['+y'+str(pred_y) + ' -y' + str(i) + ' > 0'])
+	return cnf	
