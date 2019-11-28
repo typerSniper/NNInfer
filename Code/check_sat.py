@@ -1,8 +1,10 @@
 import sys, os
 import subprocess
+from subprocess import STDOUT, check_output
+import math
 
 PATH_TO_MARABOU = '../ML_Course/Marabou/build/Marabou'
-
+TIMEOUT = 300
 
 def print_constant(val):
 	if val > 0:
@@ -33,12 +35,20 @@ def write_to_file(constraints_string, file_name = "scratch/property.txt"):
 
 def call_marabou(nnet_file, property_file):
 	global PATH_TO_MARABOU
+	global TIMEOUT
 	flags = ['--verbosity=0']
 	cmd = [PATH_TO_MARABOU, nnet_file, property_file] + flags
-	proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-	(out, err) = proc.communicate()
+	is_timeout = 0
+	try:
+		out = check_output(cmd, stderr=STDOUT, timeout=TIMEOUT)
+	except:
+		is_timeout = 1
+		print ("timeout")
+		return True
+
 	out = str(out)
-	print(out.count('SAT'))
+	# print (out)
+	# print(out.count('SAT'))
 	assert out.count('SAT')==1, "Number of SAT in Marabou assumption failed"
 	return (not "UNSAT" in out)
 
@@ -63,7 +73,7 @@ def check_sat(activation_pattern, cnf_properties, nnet_file):
 	for clause in dnf_properties:
 		constraints = activation_pattern_list + clause
 		constraints_string = '\n'.join(constraints)
-		print(constraints_string)
+		# print(constraints_string)
 		property_file = write_to_file(constraints_string)
 		sat = call_marabou(nnet_file, property_file)
 		if sat:

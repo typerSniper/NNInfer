@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 
-num_pts = 100
+num_pts = 50
 
 def list_colors(num_colors):
 	''' Returns a list of matplotlib colors '''
@@ -57,7 +58,7 @@ def plot_base(model, property_original, save_fname):
 		for y in yps:
 			act_pattern = model.activation_pattern_from_input(np.array([x,y]))
 			color_ind = map_to_cindex(act_pattern, hidden_neurons)
-			plt.plot([x], [y], marker='o', markersize=2, color=colors[color_ind])
+			plt.plot([x], [y], marker='o', markersize=4, color=colors[color_ind])
 			# plt.text(x, y, str(color_ind), color="red", fontsize=3)
 
 	# Plot the property separator
@@ -75,6 +76,7 @@ def plot_base(model, property_original, save_fname):
 		sign = prop_comp[2]
 		value = float(prop_comp[3])
 		
+		labelled = False
 		for x in xps:
 			prev_ = np.inf
 			for y in yps:
@@ -86,56 +88,90 @@ def plot_base(model, property_original, save_fname):
 					prev_ = curr_
 				else:
 					if curr_ != prev_:
-						plt.plot([x], [y], marker='+', markersize=4, color='yellow')
+						if not labelled:
+							plt.plot([x], [y], marker='+', markersize=4, color='yellow', label='True separator of original property')
+							labelled = True
+						else:
+							plt.plot([x], [y], marker='+', markersize=4, color='yellow')
 					prev_ = curr_
 	# Save figure
-	plt.savefig(save_fname)
-	plt.clf()
+	plt.legend(loc='center', bbox_to_anchor=(0.5,1.1), ncol=2)
+	plt.savefig(save_fname, dpi=600)
+	# plt.clf()
 
 # Helper function
-def plot_linear_2d(w, b, min_val, max_val, delta=0):
+def plot_linear_2d(w, b, min_val, max_val, color, label, labelled, delta=0):
 	''' Plots w^Tx + b = delta in 2D '''
 	assert w.shape == (2,), "Incorrect shape in plot_linear_2d"
 	xps = np.linspace(min_val, max_val, num_pts)
 	y = (-w[0]/w[1])*xps  + ((delta-b)/w[1])
-	plt.plot(xps, y, 'k-')
+	plt.ylim(min_val,max_val)
+	if not labelled:
+		plt.plot(xps, y, color+'-', label=label)
+	else:
+		plt.plot(xps, y, color+'-')
 
-def plot_act_pattern(model, point, act_pattern, weights, biases, save_fname):
+def plot_box_2d(box, color):
+	x0_low, x0_high = box[0][0], box[0][1]
+	x1_low, x1_high = box[1][0], box[1][1]
+	rect = Rectangle((x0_low, x1_low), x0_high-x0_low, x1_high-x1_low, color=color, linestyle='-', linewidth=3)
+	plt.gca().add_patch(rect)
+
+def plot_act_pattern(model, point, act_pattern, weights, biases, save_fname, box):
 	'''
 	Plots point which is (supposed to be) the point that created act_pattern.
 	Plots the given activation pattern also. Pattern can be relaxed.
 	'''
 	plt.plot([point[0]], [point[1]], marker='x', markersize=3, color='red')
+	color = 'k'
 	# Plot the activation pattern's linear boundaries
 	# TODO : color the side of boundary that is in the pattern
 	min_val, max_val = model.min_input_val, model.max_input_val
 	hidlyrs, maxneurons = act_pattern.shape
+	labelled = False
 	for hidlyr in range(hidlyrs):
 		for neuron in range(maxneurons):
 			if act_pattern[hidlyr][neuron] in [0,1]:
 				w = np.reshape(weights[hidlyr][neuron, :], (-1,))
 				b = biases[hidlyr][neuron]
-				plot_linear_2d(w, b, min_val, max_val)
+				plot_linear_2d(w, b, min_val, max_val, color, 'Paper\'s Activation Constraint', labelled)
+				labelled = True
 	# Save figure
-	plt.savefig(save_fname)
-	plt.clf()
+	plot_box_2d(box, color)
+	plt.legend(loc='center', bbox_to_anchor=(0.5,1.1), ncol=2)
+	plt.savefig(save_fname, dpi=600)
+	# plt.clf()
 
-def plot_act_pattern_eps(model, point, act_pattern, weights, biases, save_fname, weight, bias, eps):
+def plot_act_pattern_eps(model, point, act_pattern, weights, biases, save_fname, weight, bias, eps, box):
 	plt.plot([point[0]], [point[1]], marker='x', markersize=3, color='red')
 	# Plot the activation pattern's linear boundaries
 	# TODO : color the side of boundary that is in the pattern
+	color = 'b'
 	min_val, max_val = model.min_input_val, model.max_input_val
 	hidlyrs, maxneurons = act_pattern.shape
+	labelled = False
 	for hidlyr in range(hidlyrs):
 		for neuron in range(maxneurons):
 			if act_pattern[hidlyr][neuron] in [0,1]:
 				w = np.reshape(weights[hidlyr][neuron, :], (-1,))
 				b = biases[hidlyr][neuron]
-				plot_linear_2d(w, b, min_val, max_val)
+				plot_linear_2d(w, b, min_val, max_val, color, 'Our Activation Constraint', labelled)
+				labelled = True
 	# Plot the linear boundary
 	w = np.reshape(weight[0,:], (2,)) - np.reshape(weight[1,:], (2,))
 	b = bias[0] - bias[1]
-	plot_linear_2d(w, b, min_val, max_val, eps)
+	plot_linear_2d(w, b, min_val, max_val, 'g', 'Our critical boundary', False, eps)
+	# Draw the modified property line
+	xps = np.linspace(min_val, max_val, num_pts)
+	yps = np.linspace(min_val, max_val, num_pts)
+	for x in xps:
+			for y in yps:
+				pt = np.array([x,y])
+				logits = model.forward(pt)
+				if logits[0] - logits[1] >= np.dot(w,pt) + b - eps:
+					plt.plot([x], [y], marker='.', markersize=2, color='blanchedalmond')
 	# Save figure
-	plt.savefig(save_fname)
-	plt.clf()
+	plot_box_2d(box, color)
+	plt.legend(loc='center', bbox_to_anchor=(0.5,1.1), ncol=2)
+	plt.savefig(save_fname, dpi=600)
+	# plt.clf()

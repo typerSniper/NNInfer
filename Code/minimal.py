@@ -4,7 +4,7 @@ from check_sat import check_sat
 
 # asssumes that activation_pattern implies properties
 def findMinimal (activation_pattern, properties, nnet):
-	assert(not check_sat(activation_pattern, properties, nnet))
+	# assert(not check_sat(activation_pattern, properties, nnet))
 
 	num_layers = activation_pattern.shape
 
@@ -14,7 +14,6 @@ def findMinimal (activation_pattern, properties, nnet):
 		
 		num_neurons = (m_activation_pattern[layer].shape)[0]
 		m_activation_pattern[layer] = np.repeat(2, num_neurons)
-		
 		if not check_sat(m_activation_pattern, properties, nnet):
 			continue
 		else:
